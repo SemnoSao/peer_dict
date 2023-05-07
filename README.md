@@ -17,32 +17,19 @@ Recebe os comandos da interface de usuário e os processa. A camada de processam
 Recebe os comandos da camada de processamento e realiza as buscas necessárias. A camada de dados é responsável por armazenar os dados e executar as operações de busca. Também é responsável por enviar os resultados para a camada de processamento.
 ## arquitetura de sistema
 Este será um sistema cliente/servidor. O servidor é responsável por armazenar os dados e executar as operações de busca. O cliente é responsável por enviar os comandos para o servidor e receber os resultados. Ao lado do cliente teremos o componente de interface e do lado do servidor teremos o componente de processamento e dados. Dessa forma, descrevemos as seguintes ações:
-- o usuário inicia uma conexão com o servidor através da interface, o servidor informa se existem dicionários disponíveis, em caso contrario, a interface pede para que um novo dicionario seja criado
-- para criar um dicionario o usuário informa o nome do dicionario e a senha de administrador e o servidor cria o arquivo
-- uma vez com dicionario escolhido o servidor entra em modo de escuta
+- o usuário inicia uma conexão com o servidor através da interface, o servidor então inicia uma thread que ficara em escuta de mensagens dessa conexão
 - uma vez em modo de escuta o usuário pode enviar comandos para o servidor através da interface
 - ao enviar uma entrada para ser armazenada o servidor recebe e armazena, retornando a confirmação para o usuário
 - ao iniciar uma busca o servidor recebe e realiza a busca, retornando o resultado para o usuário
 - o administrador pode iniciar um processo de remoção informando a senha no inicio da mensagem, o servidor recebe, valida a senha e remove a entrada, retornando a confirmação para o usuário
 
-
-A minha ideia orignal era como abaixo, porque na chamada do trabalho entendi errado o pedido de uma arquitetura cliente/servidor...
-Fiquei um pouco triste por que tinha gostado da ideia :(
-## arquitetura de sistema
-Este será um sistema par-a-par. Cada usuário tem um dicionário local, armazenado em arquivo onde pode realizar buscas, adicionar e remover entradas. Cada usuário também pode se conectar a outros usuários para compartilhar seus dicionários. Quando um usuário se conecta a outro, ele pode realizar buscas no dicionário do outro usuário. 
-Dessa forma, um usuário pode começar uma instância local, onde terá um terminal com comandos para:
-- adicionar uma entrada ao dicionário local
-- remover uma entrada do dicionário local
-- buscar uma entrada nos dicionários conectados
-- conectar a outro usuário 
-
-Assim, toda instancia do sistema funciona em todas as camadas e cabe a camada de processamento iniciar as buscas local e remotamente, reunindo a informação coletada e transmitindo à camada de aplicação. Descreve-se a busca, a operação de fato distribuída, da seguinte forma:
-1. o usuário inicia uma busca local através da camada de aplicação
-2. a camada de aplicação envia a busca para a camada de processamento
-3. a camada de processamento envia a busca para a camada de dados local e armazena, temporariamente, o resultado
-4. a camada de processamento verifica se existem conexões ativas e envia a busca para as instancias remotas, e aguarda a resposta
-5. uma instancia remota realiza o passo 3 e envia o resultado para a requisitante
-6. a camada de processamento recebe o resultado, junta ao resultado do passo 3 e envia para a camada de aplicação
+### Mensagem
+a mensagem passada para o servidor tem o seguinte formato:
+```
+[comando] [chave] [tamanho do corpo]
+[corpo]
+```
+os comandos possíveis são: search, insert, remove. A chave é o termo de referência e o tamnho do corpo é o tamanho do corpo na linha de baixo que pode ser o valor da chave ou a senha de administração, tudo em texto UTF-8. Queremos que o tamanho do cabeçalho caiba em um único receive de 1024 bytes, dessa forma temos o campo comando com 5 bytes, e escolhemos o campo tamanho do corpo com 6 bytes, unicamente por simetria, dessa forma com os espaços e quebra de linha totalizando 14 bytes, portanto a chave pode ter um total de 1024-14=1010 bytes. O corpo tem um tamanho total de 99999 bytes. O tamanho do corpo é necessário para que o servidor saiba quantos bytes deve receber para completar a mensagem.
  
 
 
