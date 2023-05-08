@@ -94,7 +94,11 @@ def atendeRequisicoes(clisock, endr):
                 dados.insert(key, msg)
                 res = "valor inserido com sucesso"
             case 'search':
-                res = str(dados.search(key).join(', '))
+                tmp = dados.search(key)
+                if tmp:
+                    res = str(tmp.join(', '))
+                else:
+                    res = "chave não encontrada"
             case 'remove':
                 if SENHA == msg:
                     dados.remove(key)

@@ -11,7 +11,7 @@ def _pegaDict():
 
 def search(key):
     with open(FILE, 'r') as arq:
-        return json.load(arq)[key]
+        return json.load(arq).get(key, None)
 
 def insert(key, val):  
     dict, arq = _pegaDict()
