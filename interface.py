@@ -59,7 +59,7 @@ Boas Vindas ao Dicionário distribuído!
 
 while True:
     op = input('Informe a opção desejada: ')
-    match op: # primeira vez q o switch do c faria diferença na minha vida, daria pra escreve pra abrir e fechar a conexao menos vezes
+    match op: # primeira vez q o switch do c faria diferença na minha vida, daria pra escreve pra abrir a conexao menos vezes
         case '1':
             sock = conecta(host)
             if sock is None: continue
@@ -67,29 +67,26 @@ while True:
             msg += input('Informe a chave a ser consultada: ')
             msg += ' 0'
             res = fazRequisicoes(sock, msg)
-            finalizaConexao(sock)
             print(res)
         case '2':
             sock = conecta(host)
             if sock is None: continue
             msg = 'insert ' 
-            msg += input('Informe a chave a ser inserida: ')
+            msg += input('Informe a chave do valor a ser inserido: ')
             val = input('Informe o valor a ser inserido: ')
             msg += ' '+str(utf8len(val))
             msg += '\n'+val
             res = fazRequisicoes(sock, msg)
-            finalizaConexao(sock)
             print(res)
         case '3':
             sock = conecta(host)
             if sock is None: continue
-            msg = 'insert ' 
-            msg += input('Informe a chave a ser removida: ')
+            msg = 'remove ' 
+            msg += input('Informe a chave do valor a ser removido: ')
             val = input('Informe a senha de administrador: ')
             msg += ' '+str(utf8len(val))
             msg += '\n'+val
             res = fazRequisicoes(sock, msg)
-            finalizaConexao(sock)
             print(res)
         case '4':
             print('Tchau! Até a próxima!')
