@@ -23,13 +23,20 @@ Este será um sistema cliente/servidor. O servidor é responsável por armazenar
 - ao iniciar uma busca o servidor recebe e realiza a busca, retornando o resultado para o usuário, como valores separados por virgula
 - o administrador pode iniciar um processo de remoção, a interface irá requisitar sua senha, o servidor recebe, valida a senha e remove a entrada, retornando a confirmação para o usuário, ou informando o erro
 
-### Mensagem
+### Mensagem Request
 a mensagem passada para o servidor tem o seguinte formato:
 ```
 [comando] [chave] [tamanho do corpo]
 [corpo]
 ```
-os comandos possíveis são: search, insert, remove. A chave é o termo de referência e o tamnho do corpo é o tamanho do corpo na linha de baixo que pode ser o valor da chave ou a senha de administração, tudo em texto UTF-8. Queremos que o tamanho do cabeçalho caiba em um único receive de 1024 bytes, dessa forma temos o campo comando com 5 bytes, e escolhemos o campo tamanho do corpo com 6 bytes, unicamente por simetria, dessa forma com os espaços e quebra de linha totalizando 14 bytes, portanto a chave pode ter um total de 1024-14=1010 bytes. O corpo tem um tamanho total de 99999 bytes. O tamanho do corpo é necessário para que o servidor saiba quantos bytes deve receber para completar a mensagem.
+os comandos possíveis são: search, insert, remove. O primeiro campo é o termo de referência e o segundo é o tamanho do corpo na linha de baixo que pode ser o valor da chave ou a senha de administração, tudo em texto UTF-8. Queremos que o tamanho do cabeçalho caiba em um único receive de 1024 bytes, dessa forma temos o campo comando com 6 bytes, e escolhemos o campo tamanho do corpo com 5 bytes, unicamente por simetria, dessa forma com os espaços e quebra de linha totalizando 14 bytes, portanto a chave pode ter um total de 1024-14=1010 bytes. O corpo tem um tamanho total de 99999 bytes. O tamanho do corpo é necessário para que o servidor saiba quantos bytes deve receber para completar a mensagem.
+
+### Mensagem Response
+a mensagem passada para o cliente tem o seguinte formato:
+```
+[tamanho] [mensagem]
+```
+o tamanho é o tamanho da mensagem em bytes, e a mensagem é o resultado da operação, podendo ser uma mensagem de erro, sucesso ou a resposta de uma operação.
  
 
 
