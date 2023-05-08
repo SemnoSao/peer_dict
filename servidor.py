@@ -96,7 +96,7 @@ def atendeRequisicoes(clisock, endr):
             case 'search':
                 tmp = dados.search(key)
                 if tmp:
-                    res = str(tmp.join(', '))
+                    res = str(', '.join(tmp))
                 else:
                     res = "chave não encontrada"
             case 'remove':
