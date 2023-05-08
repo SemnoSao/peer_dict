@@ -68,6 +68,20 @@ def atendeRequisicoes(clisock, endr):
     def utf8len(s):
         return len(s.encode('utf-8'))
     
+    def interpretaReq(s):
+        header, *msg = s.split('\n') # pega o cabeçalho e a mensagem caso exista
+        print(str(endr) + ': ' + header) # log
+        if msg: msg = '\n'.join(msg) # junta a mensagem caso ela tenha sido separada
+        cmd, key, tmh = header.split(' ') # separa o cabeçalho em comando, chave e tamanho da mensagem
+        if (utf8len(header)+1)+int(tmh) > 1024: # caso o tamanho total da mensagem seja maior que 1024, continue recebendo a mensagem
+            print('Mensagem muito grande, recebendo o restante...')
+            print('Tamanho restante: '+str(int(tmh) - utf8len(msg)))
+            restante = int(tmh) - utf8len(msg)
+            msg += clisock.recv(restante).decode('utf-8')
+            print('Mensagem recebida')
+
+        return cmd, key, msg
+
     def formataRes(s): # faz a resposta ficar no padrão
         return str(utf8len(s))+' '+s
 
@@ -78,34 +92,28 @@ def atendeRequisicoes(clisock, endr):
             print(str(endr) + ' -> desconectou')
             clisock.close() # encerra a conexao com o cliente
             return 
-        header, *msg = data.decode('utf-8').split('\n') # pega o cabeçalho e a mensagem caso exista
-        print(str(endr) + ': ' + header) # log
-        if msg: msg = '\n'.join(msg) # junta a mensagem caso ela tenha sido separada
-        cmd, key, tmh = header.split(' ') # separa o cabeçalho em comando, chave e tamanho da mensagem
-        if (utf8len(header)+1)+int(tmh) > 1024: # caso o tamanho total da mensagem seja maior que 1024, continue recebendo a mensagem
-            print('Mensagem muito grande, recebendo o restante...')
-            print('Tamanho restante: '+str(int(tmh) - utf8len(msg)))
-            restante = int(tmh) - utf8len(msg)
-            msg += clisock.recv(restante).decode('utf-8')
-            print('Mensagem recebida')
+        cmd, key, msg = interpretaReq(data.decode('utf-8')) # separa a chave e a mensagem
         
-        match cmd: # verifica qual comando deve ser executado
-            case 'insert':
-                dados.insert(key, msg)
-                res = "valor inserido com sucesso"
-            case 'search':
-                tmp = dados.search(key)
-                if tmp:
-                    res = str(', '.join(tmp))
-                else:
-                    res = "chave não encontrada"
-            case 'remove':
-                if SENHA == msg:
-                    dados.remove(key)
-                    res = "valor removido com sucesso"
-                else:
-                    res = "senha incorreta"
-        
+        try:
+            match cmd: # verifica qual comando deve ser executado
+                case 'insert':
+                    dados.insert(key, msg)
+                    res = "valor inserido com sucesso"
+                case 'search':
+                    tmp = dados.search(key)
+                    if tmp:
+                        res = str(', '.join(tmp))
+                    else:
+                        res = "404 chave não encontrada"
+                case 'remove':
+                    if SENHA == msg:
+                        dados.remove(key)
+                        res = "valor removido com sucesso"
+                    else:
+                        res = "401 senha incorreta"
+        except Exception as e:
+            print('WARNING: ', e)
+            res = '500 erro inesperado'
 
         clisock.sendall(formataRes(res).encode('utf-8')) # envia a resposta para o cliente
 
