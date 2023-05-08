@@ -21,10 +21,14 @@ def fazRequisicoes(sock, msg):
     Entrada: socket conectado ao servidor
     Saida: mensagem de retorno do servidor'''
 
-    sock.send(msg.encode('utf-8')) # envia a mensagem do usuario para o servidor
-    r = sock.recv(1024) # espera a resposta do servidor
+    sock.sendall(msg.encode('utf-8')) # envia a mensagem do usuario para o servidor
+    data = sock.recv(1024) # espera a resposta do servidor
+    tmh, *msg = data.decode('utf-8').split(' ') # pega o taamnho e a mensagem caso exista
+    if msg: msg = ' '.join(msg) # junta a mensagem caso ela tenha sido separada
+    if len(data)+int(tmh) > 1024:
+        msg += sock.recv(int(tmh)-len(msg))
     finalizaConexao(sock)
-    return str(r, encoding='utf-8') # retorna a mensagem recebida
+    return msg # retorna a mensagem recebida
 
 def finalizaConexao(sock):
     '''Fecha o socket do cliente.
