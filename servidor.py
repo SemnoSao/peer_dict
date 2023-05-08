@@ -3,6 +3,8 @@ import socket
 import threading
 from selectors import DefaultSelector, EVENT_READ # biblioteca para multiplexação de I/O de alto nível, construida em cima das primitivas de select
 
+import dados
+
 interrupt_read, interrupt_write = socket.socketpair() # Cria um par de sockets conectados entre si de maneira full-duplex
 SENHA = input('crie a senha de administrador(admin): ') or 'admin'
 
@@ -65,6 +67,9 @@ def atendeRequisicoes(clisock, endr):
 
     def utf8len(s):
         return len(s.encode('utf-8'))
+    
+    def formataRes(s): # faz a resposta ficar no padrão
+        return str(utf8len(s))+' '+s
 
     while True:
         #recebe dados do cliente
@@ -75,7 +80,7 @@ def atendeRequisicoes(clisock, endr):
             return 
         header, *msg = data.decode('utf-8').split('\n') # pega o cabeçalho e a mensagem caso exista
         print(str(endr) + ': ' + header) # log
-        msg = '\n'.join(msg) # junta a mensagem caso ela tenha sido separada
+        if msg: msg = '\n'.join(msg) # junta a mensagem caso ela tenha sido separada
         cmd, key, tmh = header.split(' ') # separa o cabeçalho em comando, chave e tamanho da mensagem
         if (utf8len(header)+1)+int(tmh) > 1024: # caso o tamanho total da mensagem seja maior que 1024, continue recebendo a mensagem
             print('Mensagem muito grande, recebendo o restante...')
@@ -86,13 +91,19 @@ def atendeRequisicoes(clisock, endr):
         
         match cmd: # verifica qual comando deve ser executado
             case 'insert':
-                res = 'insert'
+                dados.insert(key, msg)
+                res = "valor inserido com sucesso"
             case 'search':
-                res = 'search'
+                res = str(dados.search(key).join(', '))
             case 'remove':
-                res = 'remove'
+                if SENHA == msg:
+                    dados.remove(key)
+                    res = "valor removido com sucesso"
+                else:
+                    res = "senha incorreta"
         
-        clisock.send(res.encode('utf-8')) # envia a resposta para o cliente
+
+        clisock.sendall(formataRes(res).encode('utf-8')) # envia a resposta para o cliente
 
 # main thread
 
