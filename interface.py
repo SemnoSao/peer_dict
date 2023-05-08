@@ -23,6 +23,9 @@ def fazRequisicoes(sock, msg):
 
     sock.sendall(msg.encode('utf-8')) # envia a mensagem do usuario para o servidor
     data = sock.recv(1024) # espera a resposta do servidor
+    if not data: # dados vazios: servidor encerrou
+        sock.close()
+        return 'Servidor encerrou inesperadamente :('
     tmh, *msg = data.decode('utf-8').split(' ') # pega o taamnho e a mensagem caso exista
     if msg: msg = ' '.join(msg) # junta a mensagem caso ela tenha sido separada
     if len(data)+int(tmh) > 1024:
