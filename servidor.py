@@ -63,7 +63,7 @@ def finalizaServidor(clientes):
 def atendeRequisicoes(clisock, endr):
     '''Recebe mensagens e chama as funcoes apropriadas para processar os comandos recebidos
     Entrada: socket da conexao e endereco do cliente
-    Saida: '''
+    Saida: retorna nada quando a conexao for encerrada'''
 
     def utf8len(s):
         return len(s.encode('utf-8'))
@@ -84,6 +84,28 @@ def atendeRequisicoes(clisock, endr):
 
     def formataRes(s): # faz a resposta ficar no padrão
         return str(utf8len(s))+' '+s
+    
+    def searchBD(k):
+        def ordena(l):
+            return sorted(l)
+        
+        tmp = dados.search(k)
+        if tmp:
+            tmp = ordena(tmp)
+            return str(', '.join(tmp))
+        else:
+            return "404 chave não encontrada"
+
+    def removeBD(k, m):
+        if SENHA == m:
+            dados.remove(k)
+            return "valor removido com sucesso"
+        else:
+            return "401 senha incorreta"
+
+    def insertBD(k, m):
+        dados.insert(k, m)
+        return "valor inserido com sucesso"
 
     while True:
         #recebe dados do cliente
@@ -97,20 +119,11 @@ def atendeRequisicoes(clisock, endr):
         try:
             match cmd: # verifica qual comando deve ser executado
                 case 'insert':
-                    dados.insert(key, msg)
-                    res = "valor inserido com sucesso"
+                    res = insertBD(key, msg)
                 case 'search':
-                    tmp = dados.search(key)
-                    if tmp:
-                        res = str(', '.join(tmp))
-                    else:
-                        res = "404 chave não encontrada"
+                    res = searchBD(key)
                 case 'remove':
-                    if SENHA == msg:
-                        dados.remove(key)
-                        res = "valor removido com sucesso"
-                    else:
-                        res = "401 senha incorreta"
+                    res = removeBD(key, msg)
         except Exception as e:
             print('WARNING: ', e)
             res = '500 erro inesperado'
